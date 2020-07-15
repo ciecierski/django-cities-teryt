@@ -60,7 +60,7 @@ class County(Base):
     """
     County (Powiat) model.
     """
-    province = models.ForeignKey(Province, verbose_name=_('Province'))
+    province = models.ForeignKey(Province, verbose_name=_('Province'), on_delete=models.CASCADE)
 
     class Meta:
         verbose_name = _('county')
@@ -80,8 +80,8 @@ class Municipality(Base):
         ('2', 'gmina wiejska'),
         ('3', 'gmina miejsko-wiejska'),
     )
-    province = models.ForeignKey(Province, verbose_name=_('Province'))
-    county = models.ForeignKey(County, verbose_name=_('County'))
+    province = models.ForeignKey(Province, verbose_name=_('Province'), on_delete=models.CASCADE)
+    county = models.ForeignKey(County, verbose_name=_('County'), on_delete=models.CASCADE)
     type = models.CharField(_('Type'), max_length=1, choices=MUNICIPALITY_TYPE_CHOICES)
 
     class Meta:
@@ -105,9 +105,9 @@ class Place(Base):
         (CITY, _('city')),
         (VILLAGE, _('village')),
     )
-    province = models.ForeignKey(Province, verbose_name=_('Province'))
-    county = models.ForeignKey(County, verbose_name=_('County'))
-    municipality = models.ForeignKey(Municipality, verbose_name=_('Municipality'))
+    province = models.ForeignKey(Province, verbose_name=_('Province'), on_delete=models.CASCADE)
+    county = models.ForeignKey(County, verbose_name=_('County'), on_delete=models.CASCADE)
+    municipality = models.ForeignKey(Municipality, verbose_name=_('Municipality'), on_delete=models.CASCADE)
     type = models.CharField(_('Type'), max_length=2, choices=PLACE_TYPE_CHOICES)
 
     class Meta:
@@ -153,22 +153,22 @@ class Village(Place):
         verbose_name_plural = _('villages')
 
 # Workaround to reset fields after the proxy classes are defined to use RelatedManager (city_set and village_set)
-City.add_to_class('province', models.ForeignKey(Province, verbose_name=_('Province')))
-City.add_to_class('county', models.ForeignKey(County, verbose_name=_('County')))
-City.add_to_class('municipality', models.ForeignKey(Municipality, verbose_name=_('Municipality')))
-Village.add_to_class('province', models.ForeignKey(Province, verbose_name=_('Province')))
-Village.add_to_class('county', models.ForeignKey(County, verbose_name=_('County')))
-Village.add_to_class('municipality', models.ForeignKey(Municipality, verbose_name=_('Municipality')))
+City.add_to_class('province', models.ForeignKey(Province, verbose_name=_('Province'), on_delete=models.CASCADE))
+City.add_to_class('county', models.ForeignKey(County, verbose_name=_('County'), on_delete=models.CASCADE))
+City.add_to_class('municipality', models.ForeignKey(Municipality, verbose_name=_('Municipality'), on_delete=models.CASCADE))
+Village.add_to_class('province', models.ForeignKey(Province, verbose_name=_('Province'), on_delete=models.CASCADE))
+Village.add_to_class('county', models.ForeignKey(County, verbose_name=_('County'), on_delete=models.CASCADE))
+Village.add_to_class('municipality', models.ForeignKey(Municipality, verbose_name=_('Municipality'), on_delete=models.CASCADE))
 
 
 class District(Base):
     """
     District (Dzielnica) model.
     """
-    province = models.ForeignKey(Province, verbose_name=_('Province'))
-    county = models.ForeignKey(County, verbose_name=_('County'))
-    municipality = models.ForeignKey(Municipality, verbose_name=_('Municipality'))
-    city = models.ForeignKey(City, verbose_name=_('City'))
+    province = models.ForeignKey(Province, verbose_name=_('Province'), on_delete=models.CASCADE)
+    county = models.ForeignKey(County, verbose_name=_('County'), on_delete=models.CASCADE)
+    municipality = models.ForeignKey(Municipality, verbose_name=_('Municipality'), on_delete=models.CASCADE)
+    city = models.ForeignKey(City, verbose_name=_('City'), on_delete=models.CASCADE)
 
     class Meta:
         verbose_name = _('district')
