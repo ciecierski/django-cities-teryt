@@ -16,17 +16,21 @@ IMPORT_OPT = ('province', 'county', 'municipality', 'city', 'village', 'district
 class Command(BaseCommand):
     args = '[--data ...] [--import] [--flush]'
     help = 'Import/flush TERYT data'
-
     logger = logging.getLogger("cities_teryt")
 
-    option_list = BaseCommand.option_list + (
-        make_option('--data', action='append', default=[],
-                    help='Comma separated list of data types.'),
-        make_option('--import', action='store_true', default=True,
-                    help='Import selected types of data.'),
-        make_option('--flush', action='store_true', default=False,
-                    help='Flush selected types of data.'),
-    )
+    def add_arguments(self, parser):
+        parser.add_argument('--data',
+            action='append',
+            default=[],
+            help='Comma separated list of data types.')
+        parser.add_argument('--import',
+            action='store_true',
+            default=True,
+            help='Import selected types of data.')
+        parser.add_argument('--flush',
+            action='store_true',
+            default=False,
+            help='Flush selected types of data.')
 
     def handle(self, *args, **options):
         if not path.exists(IMPORT_DIR):
@@ -52,27 +56,26 @@ class Command(BaseCommand):
                 func()
 
         if options.get('import', False):
+            self.logger.info('Importing province data')
             for import_ in data:
                 func = getattr(self, "import_" + import_)
                 func()
 
     def _update_or_create(self, model, **kwargs):
-        self.logger.debug('{model}: {values}'.format(model=model.__name__, values=kwargs))
         try:
             obj = model.objects.get(id=kwargs['id'], name=kwargs['name'])
-            for key, value in kwargs.iteritems():
+            for key, value in kwargs.items():
                 if getattr(obj, key) != value:
                     setattr(obj, key, value)
-                    self.logger.info(u'Update {obj} with {key}: {value}'.format(obj=obj, key=key, value=value))
             obj.save()
         except model.DoesNotExist:
             obj = model(**kwargs)
             obj.save()
 
     def import_province(self):
-        self.logger.info('Importing province data')
+        self.stdout.write('Importing province data')
         items = etree.parse(self.terc)
-        for item in items.xpath(u'//col[text()="województwo"]/ancestor::row'):
+        for item in items.xpath(u'//NAZWA_DOD[text()="województwo"]/ancestor::row'):
             values = {
                 'id': item[0].text,
                 'name': item[4].text.lower(),
@@ -81,9 +84,9 @@ class Command(BaseCommand):
             self._update_or_create(Province, **values)
 
     def import_county(self):
-        self.logger.info('Importing county data')
+        self.stdout.write('Importing county data')
         items = etree.parse(self.terc)
-        for item in items.xpath(u'//col[text()[contains(.,"powiat")]]/ancestor::row'):
+        for item in items.xpath(u'//NAZWA_DOD[text()[contains(.,"powiat")]]/ancestor::row'):
             values = {
                 'id': '%s%s' % (item[0].text, item[1].text),
                 'name': item[4].text,
@@ -93,9 +96,9 @@ class Command(BaseCommand):
             self._update_or_create(County, **values)
 
     def import_municipality(self):
-        self.logger.info('Importing municipality data')
+        self.stdout.write('Importing municipality data')
         items = etree.parse(self.terc)
-        for item in items.xpath(u'//col[text()[contains(.,"gmina")]]/ancestor::row'):
+        for item in items.xpath(u'//NAZWA_DOD[text()[contains(.,"gmina") or contains(.,"obszar")  ]]/ancestor::row'):
             values = {
                 'id': '%s%s%s' % (item[0].text, item[1].text, item[2].text),
                 'name': item[4].text,
@@ -107,9 +110,9 @@ class Command(BaseCommand):
             self._update_or_create(Municipality, **values)
 
     def import_city(self):
-        self.logger.info('Importing city data')
+        self.stdout.write('Importing city data')
         items = etree.parse(self.simc)
-        for item in items.xpath(u'//col[@name="RM"][text()="96"]/ancestor::row'):
+        for item in items.xpath(u'//RM[text()="96"]/ancestor::row'):
             values = {
                 'id': '%s' % item[7].text,
                 'name': item[6].text,
@@ -122,9 +125,9 @@ class Command(BaseCommand):
             self._update_or_create(Place, **values)
 
     def import_village(self):
-        self.logger.info('Importing village data')
+        self.stdout.write('Importing village data')
         items = etree.parse(self.simc)
-        for item in items.xpath(u'//col[@name="RM"][text()="01"]/ancestor::row'):
+        for item in items.xpath(u'//RM[text()="01"]/ancestor::row'):
             values = {
                 'id': '%s' % item[7].text,
                 'name': item[6].text,
@@ -137,9 +140,9 @@ class Command(BaseCommand):
             self._update_or_create(Place, **values)
 
     def import_district(self):
-        self.logger.info('Importing district data')
+        self.stdout.write('Importing district data')
         items = etree.parse(self.simc)
-        for item in items.xpath(u'//col[@name="RM"][text()="99"]/ancestor::row'):
+        for item in items.xpath(u'//RM[text()="99"]/ancestor::row'):
             values = {
                 'id': '%s' % item[7].text,
                 'name': item[6].text,

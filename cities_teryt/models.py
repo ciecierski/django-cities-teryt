@@ -29,8 +29,8 @@ class Base(models.Model):
         ordering = ('name',)
         unique_together = ('id', 'name')
 
-    def __unicode__(self):
-        return u'{name} ({id})'.format(name=self.name, id=self.id)
+    def __str__(self):
+        return self.name + " " + self.id
 
     def get_display_name(self):
         name = self.name
@@ -39,14 +39,18 @@ class Base(models.Model):
             return u'{parent}'.format(parent=parent)
         return u'{name}, {parent}'.format(name=name, parent=parent)
 
-
+    @classmethod
+    def _check_model(cls):
+        errors = []
+        return errors
+        
 class Province(Base):
     """
     Province (Województwo) model.
     """
     class Meta:
-        verbose_name = _('province')
-        verbose_name_plural = _('provinces')
+        verbose_name = _('Województwo')
+        verbose_name_plural = _('Województwa')
 
     @property
     def parent(self):
@@ -60,11 +64,11 @@ class County(Base):
     """
     County (Powiat) model.
     """
-    province = models.ForeignKey(Province, verbose_name=_('Province'), on_delete=models.CASCADE)
+    province = models.ForeignKey(Province, verbose_name=_('Województwo'), on_delete=models.CASCADE)
 
     class Meta:
-        verbose_name = _('county')
-        verbose_name_plural = _('counties')
+        verbose_name = _('Powiat')
+        verbose_name_plural = _('Powiaty')
 
     @property
     def parent(self):
@@ -79,14 +83,16 @@ class Municipality(Base):
         ('1', 'gmina miejska'),
         ('2', 'gmina wiejska'),
         ('3', 'gmina miejsko-wiejska'),
+        ('4', 'miasto w gminie miejsko-wiejskiej'),
+        ('5', 'obszar wiejski w gminie miejsko-wiejskiej'),
     )
-    province = models.ForeignKey(Province, verbose_name=_('Province'), on_delete=models.CASCADE)
-    county = models.ForeignKey(County, verbose_name=_('County'), on_delete=models.CASCADE)
-    type = models.CharField(_('Type'), max_length=1, choices=MUNICIPALITY_TYPE_CHOICES)
+    province = models.ForeignKey(Province, verbose_name=_('Województwo'), on_delete=models.CASCADE)
+    county = models.ForeignKey(County, verbose_name=_('Powiat'), on_delete=models.CASCADE)
+    type = models.CharField(verbose_name=_('Typ gminy'), max_length=1, choices=MUNICIPALITY_TYPE_CHOICES)
 
     class Meta:
-        verbose_name = _('municipality')
-        verbose_name_plural = _('municipalities')
+        verbose_name = _('Gmina')
+        verbose_name_plural = _('Gminy')
 
     @property
     def parent(self):
@@ -102,17 +108,17 @@ class Place(Base):
     CITY = '96'
     VILLAGE = '01'
     PLACE_TYPE_CHOICES = (
-        (CITY, _('city')),
-        (VILLAGE, _('village')),
+        (CITY, _('miasto')),
+        (VILLAGE, _('wieś')),
     )
-    province = models.ForeignKey(Province, verbose_name=_('Province'), on_delete=models.CASCADE)
-    county = models.ForeignKey(County, verbose_name=_('County'), on_delete=models.CASCADE)
-    municipality = models.ForeignKey(Municipality, verbose_name=_('Municipality'), on_delete=models.CASCADE)
+    province = models.ForeignKey(Province, verbose_name=_('Województwo'), on_delete=models.CASCADE)
+    county = models.ForeignKey(County, verbose_name=_('Powiat'), on_delete=models.CASCADE)
+    municipality = models.ForeignKey(Municipality, verbose_name=_('Gmina'), on_delete=models.CASCADE)
     type = models.CharField(_('Type'), max_length=2, choices=PLACE_TYPE_CHOICES)
 
     class Meta:
-        verbose_name = _('place')
-        verbose_name_plural = _('places')
+        verbose_name = _('Miejscowość')
+        verbose_name_plural = _('Miejscowości')
 
     @property
     def parent(self):
@@ -132,8 +138,8 @@ class City(Place):
 
     class Meta:
         proxy = True
-        verbose_name = _('city')
-        verbose_name_plural = _('cities')
+        verbose_name = _('Miasto')
+        verbose_name_plural = _('Miasta')
 
 
 class VillageManager(models.Manager):
@@ -149,30 +155,22 @@ class Village(Place):
 
     class Meta:
         proxy = True
-        verbose_name = _('village')
-        verbose_name_plural = _('villages')
-
-# Workaround to reset fields after the proxy classes are defined to use RelatedManager (city_set and village_set)
-City.add_to_class('province', models.ForeignKey(Province, verbose_name=_('Province'), on_delete=models.CASCADE))
-City.add_to_class('county', models.ForeignKey(County, verbose_name=_('County'), on_delete=models.CASCADE))
-City.add_to_class('municipality', models.ForeignKey(Municipality, verbose_name=_('Municipality'), on_delete=models.CASCADE))
-Village.add_to_class('province', models.ForeignKey(Province, verbose_name=_('Province'), on_delete=models.CASCADE))
-Village.add_to_class('county', models.ForeignKey(County, verbose_name=_('County'), on_delete=models.CASCADE))
-Village.add_to_class('municipality', models.ForeignKey(Municipality, verbose_name=_('Municipality'), on_delete=models.CASCADE))
+        verbose_name = _('Wieś')
+        verbose_name_plural = _('Wsie')
 
 
 class District(Base):
     """
     District (Dzielnica) model.
     """
-    province = models.ForeignKey(Province, verbose_name=_('Province'), on_delete=models.CASCADE)
-    county = models.ForeignKey(County, verbose_name=_('County'), on_delete=models.CASCADE)
-    municipality = models.ForeignKey(Municipality, verbose_name=_('Municipality'), on_delete=models.CASCADE)
-    city = models.ForeignKey(City, verbose_name=_('City'), on_delete=models.CASCADE)
+    province = models.ForeignKey(Province, verbose_name=_('Wojwództwo'), on_delete=models.CASCADE)
+    county = models.ForeignKey(County, verbose_name=_('Powiat'), on_delete=models.CASCADE)
+    municipality = models.ForeignKey(Municipality, verbose_name=_('Gmina'), on_delete=models.CASCADE)
+    city = models.ForeignKey(City, verbose_name=_('Miasto'), on_delete=models.CASCADE)
 
     class Meta:
-        verbose_name = _('district')
-        verbose_name_plural = _('districts')
+        verbose_name = _('Dzielnica')
+        verbose_name_plural = _('Dzielnice')
 
     @property
     def parent(self):

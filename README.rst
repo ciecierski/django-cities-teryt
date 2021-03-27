@@ -46,7 +46,7 @@ Now, run ``syncdb``, it will only create tables for models
 
 .. code:: bash
 
-    ./manage.py syncdb
+    ./manage.py migrate --run-syncdb
 
 Configuration
 -------------
